@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>1Comply Implementation Tracker — Advait Group</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --db: #1A4084; --mb: #3A66AA; --lb: #83B1DC;
+    --off: #F1F1F1; --grey: #808080; --black: #1C1C1C;
+    --green: #2E7D32; --yellow: #F9A825; --red: #C62828;
+    --white: #ffffff;
+    --card-shadow: 0 2px 12px rgba(26,64,132,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Barlow', sans-serif; background: #f0f4fa; color: var(--black); }
+  header {
+    background: var(--db); padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  header .brand { display: flex; align-items: center; gap: 12px; }
+  header .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--lb); }
+  header h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+  header .sub { font-size: 11px; color: var(--lb); letter-spacing: 2px; text-transform: uppercase; }
+  header .date-badge { background: var(--mb); color: var(--white); font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+  .hero { background: var(--db); padding: 22px 28px 18px; }
+  .hero-grid { display: grid; grid-template-columns: repeat(5,1fr) 150px; gap: 10px; align-items: stretch; }
+  .phase-chip {
+    background: var(--mb); border-radius: 10px; padding: 12px 10px; text-align: center;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    border-bottom: 4px solid transparent;
+  }
+  .phase-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+  .chip-label { font-size: 9px; color: var(--lb); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+  .chip-pct { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 700; color: var(--white); line-height: 1; }
+  .chip-status { font-size: 9px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+  .overall-box {
+    background: rgba(255,255,255,0.08); border: 2px solid var(--lb);
+    border-radius: 10px; padding: 12px 10px; text-align: center;
+  }
+  .ov-label { font-size: 9px; color: var(--lb); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+  .ov-pct { font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 700; color: var(--white); line-height: 1; }
+  .ov-sub { font-size: 9px; color: rgba(255,255,255,0.55); }
+  .hero-bar { margin-top: 14px; }
+  .bar-track { background: rgba(255,255,255,0.15); border-radius: 4px; height: 7px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--lb), #4CA3D8); transition: width 0.5s ease; }
+  .bar-label { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 5px; text-align: right; }
+  .main { padding: 18px 28px; }
+  .info-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .info-card { background: var(--white); border-radius: 10px; padding: 12px 14px; box-shadow: var(--card-shadow); border-left: 4px solid var(--lb); }
+  .ic-label { font-size: 9px; color: var(--grey); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 3px; }
+  .ic-val { font-size: 12.5px; font-weight: 600; color: var(--db); }
+  .ic-val span { font-weight: 400; color: var(--black); }
+  .sec-header { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+  .sec-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: var(--db); text-transform: uppercase; letter-spacing: 1px; }
+  .sec-line { flex: 1; height: 2px; background: linear-gradient(90deg, var(--lb), transparent); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 6px 14px; border: none; border-radius: 20px; cursor: pointer;
+    font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 600;
+    background: var(--white); color: var(--grey); transition: all 0.15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .tab-btn:hover { background: var(--off); color: var(--db); }
+  .tab-btn.active { background: var(--db); color: var(--white); }
+  .tab-pct { font-size: 10px; opacity: 0.8; margin-left: 4px; }
+  .table-wrap { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); margin-bottom: 22px; }
+  .phase-meta { background: var(--db); padding: 11px 16px; display: flex; align-items: center; gap: 16px; }
+  .pm-title { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
+  .pm-dates { font-size: 10px; color: var(--lb); }
+  .pm-badge { margin-left: auto; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--white); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--mb); color: var(--white); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 9px 11px; text-align: left; white-space: nowrap; }
+  th.center, td.center { text-align: center; }
+  tbody tr { border-bottom: 1px solid #e8edf5; transition: background 0.1s; }
+  tbody tr:nth-child(even) { background: #f7f9fd; }
+  tbody tr:hover { background: #edf2fb; }
+  td { padding: 8px 11px; font-size: 11.5px; color: var(--black); vertical-align: middle; }
+  .sr { color: var(--grey); font-size: 10.5px; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 9.5px; font-weight: 700; color: var(--white); white-space: nowrap; }
+  .badge.completed { background: var(--green); }
+  .badge.in-progress { background: var(--yellow); color: #333; }
+  .badge.not-started { background: var(--red); }
+  .pct-cell { display: inline-block; min-width: 42px; padding: 3px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; color: var(--white); text-align: center; }
+  .pct-cell.high { background: var(--green); }
+  .pct-cell.mid { background: var(--yellow); color: #333; }
+  .pct-cell.low { background: var(--red); }
+  select.st-select, input.pct-input {
+    border: 1px solid #dde4f0; border-radius: 6px; padding: 4px 6px;
+    font-family: 'Barlow', sans-serif; font-size: 11px; background: var(--white);
+    color: var(--black); cursor: pointer; outline: none; transition: border-color 0.15s;
+  }
+  select.st-select:focus, input.pct-input:focus { border-color: var(--mb); }
+  input.pct-input { width: 52px; text-align: center; }
+  input.date-input {
+    border: 1px solid #dde4f0; border-radius: 6px; padding: 3px 6px;
+    font-family: 'Barlow', sans-serif; font-size: 10.5px; color: var(--black);
+    background: var(--white); outline: none; max-width: 108px;
+  }
+  input.date-input:focus { border-color: var(--mb); }
+  .flash-row { animation: rowflash 1.2s ease; }
+  @keyframes rowflash { 0%,100%{background:transparent} 30%{background:#fffde7} }
+  .payment-wrap { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); margin-bottom: 22px; }
+  .payment-header { background: var(--db); padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .payment-header h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); }
+  .pay-sub { font-size: 10px; color: var(--lb); margin-top: 1px; }
+  .total-badge { background: var(--lb); color: var(--db); font-weight: 700; font-size: 13px; padding: 4px 14px; border-radius: 20px; }
+  .pay-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+  .pay-dot.paid { background: var(--green); }
+  .pay-dot.due { background: var(--yellow); }
+  .pay-dot.upcoming { background: #aaa; }
+  .pay-status-text.paid { color: var(--green); font-weight: 700; font-size: 11px; }
+  .pay-status-text.due { color: var(--yellow); font-weight: 700; font-size: 11px; }
+  .pay-status-text.upcoming { color: #888; font-size: 11px; }
+  .row-paid td { opacity: 0.65; }
+  .row-paid td:nth-child(1) { text-decoration: line-through; color: var(--grey); }
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 10px; margin-bottom: 22px; }
+  .team-card { background: var(--white); border-radius: 10px; padding: 12px 14px; box-shadow: var(--card-shadow); }
+  .tc-role { font-size: 9px; color: var(--grey); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 4px; }
+  .tc-name { font-size: 13.5px; font-weight: 700; color: var(--db); margin-bottom: 2px; }
+  .tc-tag { font-size: 10px; color: var(--grey); }
+  .team-card.poc { border-left: 4px solid var(--green); }
+  .team-card.lead { border-left: 4px solid var(--mb); }
+  footer { background: var(--db); padding: 14px 28px; text-align: center; font-size: 11px; color: rgba(255,255,255,0.45); }
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green); color: var(--white);
+    padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    opacity: 0; transform: translateY(8px); transition: all 0.3s;
+    pointer-events: none; z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  .pct-toggle { display:flex; gap:3px; justify-content:center; }
+  .ptb {
+    border:1px solid #dde4f0; border-radius:6px; padding:3px 7px;
+    font-family:'Barlow',sans-serif; font-size:10px; font-weight:600;
+    background:var(--white); color:var(--grey); cursor:pointer;
+    transition:all 0.12s;
+  }
+  .ptb:hover { border-color:var(--mb); color:var(--mb); }
+  .ptb-active-red   { background:var(--red)!important;    color:var(--white)!important; border-color:var(--red)!important; }
+  .ptb-active-yellow{ background:var(--yellow)!important; color:#333!important;         border-color:var(--yellow)!important; }
+  .ptb-active-green { background:var(--green)!important;  color:var(--white)!important; border-color:var(--green)!important; }
+  .pay-st-select { min-width: 100px; }
+  .docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .doc-card { background: var(--white); border-radius: 12px; padding: 18px 18px 14px; box-shadow: var(--card-shadow); display: flex; gap: 14px; border-top: 4px solid var(--mb); }
+  .doc-num { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 700; color: var(--lb); line-height: 1; min-width: 32px; }
+  .doc-body { flex: 1; }
+  .doc-title { font-size: 13px; font-weight: 700; color: var(--db); margin-bottom: 6px; }
+  .doc-desc { font-size: 11.5px; color: var(--black); line-height: 1.55; margin-bottom: 10px; }
+  .doc-link { display: inline-block; background: var(--db); color: var(--white); font-size: 11px; font-weight: 600; padding: 5px 14px; border-radius: 20px; text-decoration: none; transition: background 0.15s; }
+  .doc-link:hover { background: var(--mb); }
+  .doc-note { font-size: 10px; color: var(--yellow); margin-top: 6px; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <div class="sub">Advait Group &nbsp;·&nbsp; AETL &amp; AGPL</div>
+      <h1>1COMPLY — IMPLEMENTATION TRACKER</h1>
+    </div>
+  </div>
+  <div class="date-badge" id="hDate"></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="saveLabel" style="font-size:10px;color:var(--lb);opacity:0.8"></span>
+    <button onclick="clearSaved()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:var(--white);font-size:10px;padding:4px 10px;border-radius:12px;cursor:pointer;font-family:inherit">↺ Reset</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-grid" id="heroGrid"></div>
+  <div class="hero-bar">
+    <div class="bar-track"><div class="bar-fill" id="heroBar" style="width:0%"></div></div>
+    <div class="bar-label" id="heroLabel"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="info-row">
+    <div class="info-card"><div class="ic-label">Software</div><div class="ic-val">1Comply <span>Compliance Management Platform</span></div></div>
+    <div class="info-card"><div class="ic-label">Client</div><div class="ic-val">Advait Group <span>AGPL &amp; AETL</span></div></div>
+    <div class="info-card"><div class="ic-label">Implementing Partner</div><div class="ic-val">1Comply Team</div></div>
+    <div class="info-card"><div class="ic-label">Implementation POC</div><div class="ic-val">Sparsh Desai <span>under Aditya Pawar</span></div></div>
+    <div class="info-card"><div class="ic-label">CS Team POC</div><div class="ic-val">Vikas Dahiya <span>under Deepa Fernandes</span></div></div>
+    <div class="info-card"><div class="ic-label">Common POC — Both Teams</div><div class="ic-val" style="color:var(--green)">Sparsh Desai <span style="color:var(--black)">Advait ↔ 1Comply</span></div></div>
+  </div>
+
+  <div class="sec-header"><h2>Phase Details — Live Editor</h2><div class="sec-line"></div></div>
+  <div style="font-size:11px;color:var(--grey);margin-bottom:10px;">✏️ Edit any % or Status below — Phase % and Overall % update instantly across all views.</div>
+  <div class="tabs" id="tabs"></div>
+  <div id="phaseContent"></div>
+
+  <div class="sec-header"><h2>Payment Schedule to 1Comply</h2><div class="sec-line"></div></div>
+  <div class="payment-wrap">
+    <div class="payment-header">
+      <div><h3>Payment Milestones</h3><div class="pay-sub">Payable by Advait Group to 1Comply team</div></div>
+      <div class="total-badge">Total: ₹ 3,50,000</div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Phase</th><th>Module</th>
+        <th class="center">Amount</th>
+        <th>Payment Condition</th>
+        <th class="center">Due Date</th>
+        <th class="center">Status</th>
+        <th class="center">Paid On</th>
+      </tr></thead>
+      <tbody id="payBody"></tbody>
+    </table>
+  </div>
+
+  <div class="sec-header"><h2>Team &amp; Responsibilities</h2><div class="sec-line"></div></div>
+  <div class="team-grid">
+    <div class="team-card poc">
+      <div class="tc-role">Common POC — Both Teams</div>
+      <div class="tc-name">Sparsh Desai</div>
+      <div class="tc-tag">Single liaison: Advait Group ↔ 1Comply</div>
+    </div>
+    <div class="team-card lead">
+      <div class="tc-role">Implementation POC</div>
+      <div class="tc-name">Sparsh Desai</div>
+      <div class="tc-tag">Under guidance of Aditya Pawar</div>
+    </div>
+    <div class="team-card">
+      <div class="tc-role">CS Team POC</div>
+      <div class="tc-name">Vikas Dahiya</div>
+      <div class="tc-tag">Under Deepa Fernandes, 1Comply</div>
+    </div>
+    <div class="team-card">
+      <div class="tc-role">Advait Group POC</div>
+      <div class="tc-name">Sparsh Desai</div>
+      <div class="tc-tag">Internal point of contact, Advait Group</div>
+    </div>
+  </div>
+  <!-- KEY DOCUMENTS -->
+  <div class="sec-header"><h2>Key Reference Documents</h2><div class="sec-line"></div></div>
+  <div class="docs-grid">
+    <div class="doc-card">
+      <div class="doc-num">01</div>
+      <div class="doc-body">
+        <div class="doc-title">Compliances &amp; Applicable Law Sheet</div>
+        <div class="doc-desc">Master list of all applicable compliances with <strong>Maker / Checker / Viewer</strong> roles to be assigned. Team to fill in responsible persons for each compliance.</div>
+        <a class="doc-link" href="https://advaitinfrat-my.sharepoint.com/:x:/g/personal/common_onedrive_advaitgroup_co_in/IQCVQyba9hVXRLRoM7X4a8C0AfVBbtvz-L68OkwhIB5ED-E?e=4kBddI" target="_blank">📄 Open Sheet →</a>
+      </div>
+    </div>
+    <div class="doc-card">
+      <div class="doc-num">02</div>
+      <div class="doc-body">
+        <div class="doc-title">POC Documents &amp; Sheets (Ongoing Compliance Upload Folder)</div>
+        <div class="doc-desc">Folder where team members must <strong>upload all ongoing compliance documents</strong> being followed — including licences, certificates, agreements, and insurance copies.</div>
+        <a class="doc-link" href="https://advaitinfrat-my.sharepoint.com/:x:/g/personal/common_onedrive_advaitgroup_co_in/IQDTNRKnL4-lSbCJZ4lI12GwAcP9CWtHlOc6S2VI3JOFzZ4?e=okreOu" target="_blank">📂 Open Folder →</a>
+      </div>
+    </div>
+    <div class="doc-card">
+      <div class="doc-num">03</div>
+      <div class="doc-body">
+        <div class="doc-title">Trade Documents &amp; All Time Compliances Sheet</div>
+        <div class="doc-desc">Contains: (a) <strong>Trade Agreements</strong> — list of agreements to be provided to 1Comply. (b) <strong>All-Time Compliances</strong> — select periodicity of applicable laws (daily / monthly / annual etc.).</div>
+        <a class="doc-link" href="https://advaitinfrat-my.sharepoint.com/:x:/g/personal/common_onedrive_advaitgroup_co_in/IQD0WQlM92PeQp2O-smR40OaAZmZvyej3kbYx1edIwvfPjU?e=MByytn" target="_blank">📊 Open Sheet →</a>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Advait Group (AETL &amp; AGPL) &nbsp;|&nbsp; 1Comply Implementation Tracker &nbsp;|&nbsp; Internal Use Only</footer>
+<div id="toast">✓ Saved — all phases updated</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// ── Firebase config ──────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyB6BaP-wvX3m8nbJuWD7g7de7AfYga-kw0",
+  authDomain: "comply-tracker.firebaseapp.com",
+  databaseURL: "https://comply-tracker-default-rtdb.firebaseio.com",
+  projectId: "comply-tracker",
+  storageBucket: "comply-tracker.firebasestorage.app",
+  messagingSenderId: "824316372973",
+  appId: "1:824316372973:web:db67f067b090dabfa3a9e4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const REF = db.ref("tracker");
+
+// ── Default data (used only on first ever load) ──────────────
+const phases=[
+  {id:"Phase 1",module:"F&A & Purchase",full:"F&A (Accounts, Tax, Audit, Finance, Banking & Treasury)",
+   start:"31-Mar-26",plannedEnd:"07-Apr-26",revisedEnd:"21-Apr-26",status:"In Progress",
+   steps:[
+    {sr:1,step:"Kick-Off Meeting",proposed:"31-Mar-26",actual:"31-Mar-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:2,step:"Business Analysis",proposed:"01-Apr-26",actual:"02-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:3,step:"Identification of Laws & Compliances",proposed:"1-2 Apr 2026",actual:"04-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:4,step:"Confirmation of Compliances",proposed:"03-Apr-26",actual:"16-Apr-26",status:"Completed",owner:"Advait",pct:100},
+    {sr:5,step:"BU + User Creation",proposed:"03-Apr-26",actual:"18-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:6,step:"Mapping of Compliances",proposed:"04-Apr-26",actual:"16-Apr-26",status:"Completed",owner:"Advait",pct:100},
+    {sr:7,step:"Upload Licenses, Certs, Agreements, Insurance",proposed:"4-6 Apr 2026",actual:"21-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+    {sr:8,step:"Trade Agreements & All-time Compliances",proposed:"4-6 Apr 2027",actual:"20-Apr-26",status:"In Progress",owner:"Advait",pct:10},
+    {sr:9,step:"Gather Compliances, Licences, Certs, Insurance",proposed:"18-Apr-26",actual:"20-Apr-26",status:"In Progress",owner:"Advait",pct:10},
+    {sr:10,step:"User Training",proposed:"06-Apr-26",actual:"14-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:11,step:"Final Handover",proposed:"07-Apr-26",actual:"21-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+  ]},
+  {id:"Phase 2",module:"HR & Admin & IT",full:"HR & Admin Module",
+   start:"15-Apr-26",plannedEnd:"24-Apr-26",revisedEnd:"27-Apr-26",status:"In Progress",
+   steps:[
+    {sr:1,step:"Business Analysis",proposed:"01-Apr-26",actual:"02-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:2,step:"Identification of Laws & Compliances",proposed:"22-Apr-26",actual:"22-Apr-26",status:"In Progress",owner:"1 Comply",pct:10},
+    {sr:3,step:"Confirmation of Compliances",proposed:"22-Apr-26",actual:"22-Apr-26",status:"In Progress",owner:"Advait",pct:10},
+    {sr:4,step:"BU + User Creation",proposed:"24-Apr-26",actual:"24-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+    {sr:5,step:"Mapping of Compliances",proposed:"22-Apr-26",actual:"22-Apr-26",status:"Not Started",owner:"Advait",pct:0},
+    {sr:6,step:"Upload Licenses, Certs, Agreements, Insurance",proposed:"24-Apr-26",actual:"24-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+    {sr:7,step:"Trade Agreements & All-time Compliances",proposed:"23-Apr-26",actual:"23-Apr-26",status:"Not Started",owner:"Advait",pct:0},
+    {sr:8,step:"Gather Compliances, Licences, Certs, Insurance",proposed:"18-Apr-26",actual:"20-Apr-26",status:"In Progress",owner:"Advait",pct:10},
+    {sr:9,step:"User Training",proposed:"06-Apr-26",actual:"14-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:10,step:"Final Handover",proposed:"27-Apr-26",actual:"27-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+  ]},
+  {id:"Phase 3",module:"Legal & Compliance",full:"Legal, Secretarial, Corporate & Factory Compliance + IPR + EHS + Manufacturing & EPC",
+   start:"15-Apr-26",plannedEnd:"28-Apr-26",revisedEnd:"30-Apr-26",status:"In Progress",
+   steps:[
+    {sr:1,step:"Business Analysis",proposed:"01-Apr-26",actual:"02-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:2,step:"Identification of Laws & Compliances",proposed:"22-Apr-26",actual:"22-Apr-26",status:"In Progress",owner:"1 Comply",pct:10},
+    {sr:3,step:"Confirmation of Compliances",proposed:"22-Apr-26",actual:"22-Apr-26",status:"In Progress",owner:"Advait",pct:10},
+    {sr:4,step:"BU + User Creation",proposed:"24-Apr-26",actual:"24-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+    {sr:5,step:"Mapping of Compliances",proposed:"22-Apr-26",actual:"22-Apr-26",status:"Not Started",owner:"Advait",pct:0},
+    {sr:6,step:"Upload Licenses, Certs, Agreements, Insurance",proposed:"27-Apr-26",actual:"27-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+    {sr:7,step:"Trade Agreements & All-time Compliances",proposed:"29-Apr-26",actual:"29-Apr-26",status:"Not Started",owner:"Advait",pct:0},
+    {sr:8,step:"Gather Compliances, Licences, Certs, Insurance",proposed:"18-Apr-26",actual:"20-Apr-26",status:"In Progress",owner:"Advait",pct:10},
+    {sr:9,step:"User Training",proposed:"06-Apr-26",actual:"14-Apr-26",status:"Completed",owner:"1 Comply",pct:100},
+    {sr:10,step:"Final Handover",proposed:"30-Apr-26",actual:"30-Apr-26",status:"Not Started",owner:"1 Comply",pct:0},
+  ]},
+  {id:"Phase 4",module:"Custom Alerts",full:"Custom Alerts + Additional Compliance",
+   start:"15-Apr-26",plannedEnd:"30-Apr-26",revisedEnd:"04-May-26",status:"In Progress",
+   steps:[
+    {sr:1,step:"One Alert Template",proposed:"30-Apr-26",actual:"",status:"In Progress",owner:"Advait",pct:10},
+    {sr:2,step:"Gathered Data Verification",proposed:"30-Apr-26",actual:"",status:"In Progress",owner:"Advait",pct:10},
+    {sr:3,step:"Other Compliances Addition",proposed:"30-Apr-26",actual:"",status:"In Progress",owner:"Advait",pct:10},
+    {sr:4,step:"Final Handover",proposed:"04-May-26",actual:"",status:"Not Started",owner:"1 Comply",pct:0},
+  ]},
+  {id:"Phase 5",module:"Final Closure",full:"Final Full Implementation",
+   start:"01-May-26",plannedEnd:"01-May-26",revisedEnd:"05-May-26",status:"Not Started",
+   steps:[
+    {sr:1,step:"Final Handover",proposed:"05-May-26",actual:"",status:"Not Started",owner:"1 Comply | Advait",pct:0},
+  ]}
+];
+
+const payments=[
+  {phase:"Phase 1",module:"F&A (Accounts, Tax, Audit, Finance, Banking & Treasury)",amount:"₹ 1,00,000",rawAmt:100000,condition:"Against Proforma Invoice",date:"06-04-2026",ps:"paid",paidDate:"06-04-2026"},
+  {phase:"Phase 2",module:"HR & Admin Module",amount:"₹ 50,000",rawAmt:50000,condition:"After successful Phase 1 implementation",date:"20-04-2026",ps:"due",paidDate:""},
+  {phase:"Phase 3",module:"Legal, Secretarial, Corporate & Factory Compliance",amount:"₹ 1,00,000",rawAmt:100000,condition:"After successful Phase 2 implementation",date:"23-04-2026",ps:"upcoming",paidDate:""},
+  {phase:"Phase 4",module:"Custom Alerts + Additional Compliance",amount:"₹ 50,000",rawAmt:50000,condition:"After successful Phase 3 implementation",date:"27-04-2026",ps:"upcoming",paidDate:""},
+  {phase:"Phase 5",module:"Final Full Implementation",amount:"₹ 50,000",rawAmt:50000,condition:"Payable within 15 days after Phase 4 completion",date:"14-05-2026",ps:"upcoming",paidDate:""},
+];
+
+let activeTab=0;
+
+function phasePct(ph){
+  const s=ph.steps;
+  return Math.round(s.reduce((a,b)=>a+b.pct,0)/s.length);
+}
+function overall(){
+  return Math.round(phases.reduce((a,p)=>a+phasePct(p),0)/phases.length);
+}
+function chipCol(p){
+  return p>=80?"#2E7D32":p>=10?"#F9A825":"#C62828";
+}
+function pctCls(p){
+  return p>=80?"high":p>0?"mid":"low";
+}
+function stCls(s){
+  if(s==="Completed")return"completed";
+  if(s==="In Progress")return"in-progress";
+  return"not-started";
+}
+
+function renderAll(){
+  renderHero();
+  renderTabs();
+  renderPhase();
+  renderPayments();
+}
+
+function renderHero(){
+  const ov=overall();
+  let h="";
+  phases.forEach((p,i)=>{
+    const pct=phasePct(p);
+    h+=`<div class="phase-chip" onclick="go(${i})" style="border-bottom:4px solid ${chipCol(pct)}">
+      <div class="chip-label">${p.id}</div>
+      <div class="chip-pct">${pct}%</div>
+      <div class="chip-status">${p.status}</div>
+    </div>`;
+  });
+  h+=`<div class="overall-box">
+    <div class="ov-label">Overall</div>
+    <div class="ov-pct">${ov}%</div>
+    <div class="ov-sub">All Phases</div>
+  </div>`;
+  document.getElementById("heroGrid").innerHTML=h;
+  document.getElementById("heroBar").style.width=ov+"%";
+  const todayStr = new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+  document.getElementById("heroLabel").textContent=`Overall: ${ov}% complete across all 5 phases  ·  As of ${todayStr}`;
+}
+
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=phases.map((p,i)=>
+    `<button class="tab-btn ${i===activeTab?"active":""}" onclick="go(${i})">${p.id}<span class="tab-pct">${phasePct(p)}%</span></button>`
+  ).join("");
+}
+
+function go(i){activeTab=i;renderTabs();renderPhase();}
+
+function renderPhase(){
+  const ph=phases[activeTab];
+  const pct=phasePct(ph);
+  let rows=ph.steps.map((st,si)=>`
+    <tr id="r${activeTab}-${si}">
+      <td class="center sr">${st.sr}</td>
+      <td>${st.step}</td>
+      <td class="center"><input class="date-input" value="${st.proposed}" onchange="setField(${activeTab},${si},'proposed',this.value)"/></td>
+      <td class="center"><input class="date-input" value="${st.actual||''}" onchange="setField(${activeTab},${si},'actual',this.value)"/></td>
+      <td class="center">
+        <select class="st-select" onchange="setSt(${activeTab},${si},this.value)">
+          <option ${st.status==="Completed"?"selected":""}>Completed</option>
+          <option ${st.status==="In Progress"?"selected":""}>In Progress</option>
+          <option ${st.status==="Not Started"?"selected":""}>Not Started</option>
+        </select>
+      </td>
+      <td class="center">${st.owner}</td>
+      <td class="center">
+        <input class="pct-input" type="number" min="0" max="100" value="${st.pct}" oninput="setPct(${activeTab},${si},this.value)"/>
+      </td>
+      <td class="center"><span class="pct-cell ${pctCls(st.pct)}">${st.pct}%</span></td>
+    </tr>`).join("");
+
+  document.getElementById("phaseContent").innerHTML=`
+    <div class="table-wrap">
+      <div class="phase-meta">
+        <div>
+          <div class="pm-title">${ph.id} — ${ph.full}</div>
+          <div class="pm-dates">Start: ${ph.start} &nbsp;|&nbsp; Planned End: ${ph.plannedEnd} &nbsp;|&nbsp; Revised End: ${ph.revisedEnd}</div>
+        </div>
+        <div class="pm-badge" style="background:${chipCol(pct)}">${pct}% Complete</div>
+      </div>
+      <table>
+        <thead><tr>
+          <th class="center" style="width:40px">Sr.</th>
+          <th>Action Step</th>
+          <th class="center">Proposed Date</th>
+          <th class="center">Actual Date</th>
+          <th class="center">Status</th>
+          <th class="center">Owner</th>
+          <th class="center">Edit %</th>
+          <th class="center">Progress</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderPayments(){
+  const lbl={paid:"Paid ✓",due:"Due Now",upcoming:"Upcoming"};
+  const col={paid:"var(--green)",due:"var(--yellow)",upcoming:"#888"};
+  const paidCount=payments.filter(p=>p.ps==="paid").length;
+  const paidAmt=payments.filter(p=>p.ps==="paid").reduce((a,p)=>a+p.rawAmt,0);
+  const pendAmt=payments.filter(p=>p.ps!=="paid").reduce((a,p)=>a+p.rawAmt,0);
+
+  document.getElementById("payBody").innerHTML=payments.map((p,i)=>`
+    <tr class="${p.ps==="paid"?"row-paid":""}">
+      <td><strong>${p.phase}</strong></td>
+      <td style="font-size:10.5px">${p.module}</td>
+      <td class="center" style="font-weight:700;color:var(--db)">${p.amount}</td>
+      <td style="font-size:10.5px">${p.condition}</td>
+      <td class="center" style="font-weight:600;font-size:11px">${p.date}</td>
+      <td class="center">
+        <select class="st-select pay-st-select" onchange="setPayStatus(${i},this.value)" style="font-weight:600;font-size:11px;color:${col[p.ps]};border-color:${col[p.ps]}">
+          <option value="paid" ${p.ps==="paid"?"selected":""}>✓ Paid</option>
+          <option value="due" ${p.ps==="due"?"selected":""}>Due Now</option>
+          <option value="upcoming" ${p.ps==="upcoming"?"selected":""}>Upcoming</option>
+        </select>
+      </td>
+      <td class="center" style="font-size:10.5px;color:var(--grey)">${p.ps==="paid"?`<span style="color:var(--green);font-weight:600">Paid on ${p.paidDate||p.date}</span>`:`<input class="date-input" placeholder="Paid on..." style="width:100px" onchange="setPayDate(${i},this.value)"/>`}</td>
+    </tr>`).join("")+`
+    <tr style="background:#eef3fa;font-size:11px">
+      <td colspan="2" style="font-weight:700;color:var(--db)">TOTAL</td>
+      <td class="center" style="font-weight:700;color:var(--db);font-size:14px">₹ 3,50,000</td>
+      <td colspan="2" style="color:var(--grey)">
+        <span style="color:var(--green);font-weight:600">Paid: ₹ ${paidAmt.toLocaleString('en-IN')}</span>
+        &nbsp;·&nbsp;
+        <span style="color:var(--yellow);font-weight:600">Pending: ₹ ${pendAmt.toLocaleString('en-IN')}</span>
+      </td>
+      <td colspan="2" style="color:var(--grey);font-size:10px">${paidCount} of ${payments.length} milestones paid</td>
+    </tr>`;
+}
+
+// ── Firebase sync ────────────────────────────────────────────
+let _fbReady = false;
+let _saving = false;
+
+function syncIndicator(state) {
+  const el = document.getElementById("saveLabel");
+  if (!el) return;
+  if (state === "saving")  { el.textContent = "⏳ Saving..."; el.style.color = "#F9A825"; }
+  if (state === "saved")   { el.textContent = "☁️ Synced · " + new Date().toLocaleTimeString("en-IN"); el.style.color = "#83B1DC"; }
+  if (state === "offline") { el.textContent = "⚠️ Offline — changes saved locally"; el.style.color = "#F9A825"; }
+  if (state === "live")    { el.textContent = "🟢 Live"; el.style.color = "#83B1DC"; }
+}
+
+function saveToFirebase() {
+  if (_saving) return;
+  _saving = true;
+  syncIndicator("saving");
+  const payload = {
+    phases: phases.map(p => ({ steps: p.steps.map(s => ({ pct: s.pct, status: s.status, proposed: s.proposed, actual: s.actual })) })),
+    payments: payments.map(p => ({ ps: p.ps, paidDate: p.paidDate })),
+    updatedAt: Date.now()
+  };
+  REF.set(payload)
+    .then(() => { syncIndicator("saved"); _saving = false; })
+    .catch(() => { saveLocal(); syncIndicator("offline"); _saving = false; });
+}
+
+function saveLocal() {
+  try {
+    localStorage.setItem("1comply_phases", JSON.stringify(phases.map(p => ({ steps: p.steps.map(s => ({ pct: s.pct, status: s.status, proposed: s.proposed, actual: s.actual })) }))));
+    localStorage.setItem("1comply_payments", JSON.stringify(payments.map(p => ({ ps: p.ps, paidDate: p.paidDate }))));
+  } catch(e) {}
+}
+
+function applySnapshot(data) {
+  if (data.phases) {
+    data.phases.forEach((saved, i) => {
+      if (!phases[i]) return;
+      saved.steps.forEach((s, j) => {
+        if (!phases[i].steps[j]) return;
+        phases[i].steps[j].pct      = s.pct;
+        phases[i].steps[j].status   = s.status;
+        phases[i].steps[j].proposed = s.proposed;
+        phases[i].steps[j].actual   = s.actual;
+      });
+    });
+  }
+  if (data.payments) {
+    data.payments.forEach((s, i) => {
+      if (!payments[i]) return;
+      payments[i].ps       = s.ps;
+      payments[i].paidDate = s.paidDate;
+    });
+  }
+}
+
+// ── Listen for real-time updates from all devices ────────────
+REF.on("value", snapshot => {
+  const data = snapshot.val();
+  if (data) {
+    if (!_saving) {          // don't overwrite while we're mid-save
+      applySnapshot(data);
+      renderHero();
+      renderTabs();
+      renderPhase();
+      renderPayments();
+    }
+    if (!_fbReady) {
+      _fbReady = true;
+      syncIndicator("live");
+    }
+  } else {
+    // First ever open — no data in Firebase yet, use defaults
+    _fbReady = true;
+    saveToFirebase();        // seed Firebase with defaults
+  }
+});
+
+// ── All edit actions call saveToFirebase ─────────────────────
+function cascade() {
+  renderHero(); renderTabs(); renderPhase();
+  saveToFirebase();
+  toastSave();
+}
+function setField(pi, si, f, v) {
+  phases[pi].steps[si][f] = v;
+  saveToFirebase();
+  toastSave();
+}
+function setPayStatus(i, val) {
+  payments[i].ps = val;
+  if (val === "paid" && !payments[i].paidDate) {
+    payments[i].paidDate = new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"2-digit", year:"numeric" }).replace(/\//g, "-");
+  }
+  renderPayments();
+  saveToFirebase();
+  toastSave();
+}
+function setPayDate(i, val) {
+  payments[i].paidDate = val;
+  saveToFirebase();
+  toastSave();
+}
+function setPct(pi, si, val) {
+  const v = Math.max(0, Math.min(100, parseInt(val) || 0));
+  phases[pi].steps[si].pct = v;
+  if (v === 100)      phases[pi].steps[si].status = "Completed";
+  else if (v > 0)     phases[pi].steps[si].status = "In Progress";
+  else                phases[pi].steps[si].status = "Not Started";
+  cascade();
+}
+function setSt(pi, si, val) {
+  phases[pi].steps[si].status = val;
+  if (val === "Completed")        phases[pi].steps[si].pct = 100;
+  else if (val === "Not Started") phases[pi].steps[si].pct = 0;
+  // In Progress keeps whatever custom % the user set
+  cascade();
+}
+function toastSave() {
+  const t = document.getElementById("toast");
+  t.innerHTML = "☁️ Saving to cloud...";
+  t.classList.add("show");
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove("show"), 2000);
+}
+function clearSaved() {
+  if (confirm("Reset ALL data back to original defaults? This affects ALL devices.")) {
+    REF.remove().then(() => { localStorage.clear(); location.reload(); });
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────
+function updateHeaderDate() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-IN", { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
+  const timeStr = now.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" });
+  document.getElementById("hDate").textContent = dateStr + "  " + timeStr;
+}
+updateHeaderDate();
+setInterval(updateHeaderDate, 60000); // refresh every minute
+syncIndicator("saving");
+renderAll();   // render with defaults immediately, Firebase will update when it arrives
+</script>
+</body>
+</html>
